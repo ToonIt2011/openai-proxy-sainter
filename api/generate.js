@@ -1,3 +1,9 @@
+export const config = {
+  api: {
+    bodyParser: true
+  }
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Only POST requests allowed' });
@@ -28,13 +34,28 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // 🚨 NOVA VERIFICAÇÃO: caso venha um erro da OpenAI
+    if (data.error) {
+      return res.status(500).json({
+        error: 'Erro da OpenAI detectado.',
+        detalhe: data.error
+      });
+    }
+
+    // 🚨 AINDA NÃO TEM `choices`? Retorna tudo cru para investigar
     if (!data.choices || !data.choices.length) {
-      return res.status(500).json({ error: 'Resposta inesperada da OpenAI.' });
+      return res.status(500).json({
+        error: 'Resposta da OpenAI sem choices.',
+        corpoCompleto: data
+      });
     }
 
     return res.status(200).json({ result: data.choices[0].message.content });
+
   } catch (err) {
-    console.error('Erro ao gerar e-mail:', err);
-    return res.status(500).json({ error: 'Erro interno ao gerar e-mail com IA.' });
+    return res.status(500).json({
+      error: 'Erro no servidor Sainter.',
+      detalhe: err.message
+    });
   }
 }
