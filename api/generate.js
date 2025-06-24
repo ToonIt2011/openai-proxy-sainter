@@ -32,29 +32,13 @@ export default async function handler(req, res) {
       })
     });
 
+    // Retornar a resposta completa sem NENHUM filtro
     const data = await response.json();
-
-    // 🚨 NOVA VERIFICAÇÃO: caso venha um erro da OpenAI
-    if (data.error) {
-      return res.status(500).json({
-        error: 'Erro da OpenAI detectado.',
-        detalhe: data.error
-      });
-    }
-
-    // 🚨 AINDA NÃO TEM `choices`? Retorna tudo cru para investigar
-    if (!data.choices || !data.choices.length) {
-      return res.status(500).json({
-        error: 'Resposta da OpenAI sem choices.',
-        corpoCompleto: data
-      });
-    }
-
-    return res.status(200).json({ result: data.choices[0].message.content });
+    return res.status(200).json(data);
 
   } catch (err) {
     return res.status(500).json({
-      error: 'Erro no servidor Sainter.',
+      error: 'Erro ao conectar com a OpenAI.',
       detalhe: err.message
     });
   }
